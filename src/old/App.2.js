@@ -4,19 +4,15 @@ import "@aws-amplify/ui-react/styles.css";
 import { Amplify } from 'aws-amplify';
 import { generateClient } from 'aws-amplify/api';
 import config from './amplifyconfiguration.json';
-import { uploadData } from 'aws-amplify/storage';
-import { getUrl } from 'aws-amplify/storage';
-import { remove } from 'aws-amplify/storage';
 import {
   Button,
   Flex,
   Heading,
-  Image,
   Text,
   TextField,
   View,
   withAuthenticator,
-} from '@aws-amplify/ui-react';
+} from "@aws-amplify/ui-react";
 import { listNotes } from "./graphql/queries";
 import {
   createNote as createNoteMutation,
@@ -34,71 +30,34 @@ const App = ({ signOut }) => {
   }, []);
 
   async function fetchNotes() {
-  const apiData = await API.graphql({ query: listNotes });
-  const notesFromAPI = apiData.data.listNotes.items;
-  await Promise.all(
-    notesFromAPI.map(async (note) => {
-      if (note.image) {
-        const getUrlResult = await getUrl({key: note.name});
-        note.image = getUrlResult.url;
-      }
-      return note;
-    })
-  );
-  setNotes(notesFromAPI);
-}
+    const apiData = await API.graphql({ query: listNotes });
+    const notesFromAPI = apiData.data.listNotes.items;
+    setNotes(notesFromAPI);
+  }
 
-async function createNote(event) {
-  event.preventDefault();
-  const form = new FormData(event.target);
-  const image = form.get("image");
-  const data = {
-    name: form.get("name"),
-    description: form.get("description"),
-    image: image.name,
-  };
-  if (!!data.image) await uploadData({key:data.name, data:image});
-  await API.graphql({
-    query: createNoteMutation,
-    variables: { input: data },
-  });
-  fetchNotes();
-  event.target.reset();
-}
+  async function createNote(event) {
+    event.preventDefault();
+    const form = new FormData(event.target);
+    const data = {
+      name: form.get("name"),
+      description: form.get("description"),
+    };
+    await API.graphql({
+      query: createNoteMutation,
+      variables: { input: data },
+    });
+    fetchNotes();
+    event.target.reset();
+  }
 
-  async function deleteNote({ id, name }) {
-  const newNotes = notes.filter((note) => note.id !== id);
-  setNotes(newNotes);
-  await remove({key: name});
-  await API.graphql({
-    query: deleteNoteMutation,
-    variables: { input: { id } },
-  });
-}
-
-{notes.map((note) => (
-  <Flex
-    key={note.id || note.name}
-    direction="row"
-    justifyContent="center"
-    alignItems="center"
-  >
-    <Text as="strong" fontWeight={700}>
-      {note.name}
-    </Text>
-    <Text as="span">{note.description}</Text>
-    {note.image && (
-      <Image
-        src={note.image}
-        alt={`visual aid for ${notes.name}`}
-        style={{ width: 400 }}
-      />
-    )}
-    <Button variation="link" onClick={() => deleteNote(note)}>
-      Delete note
-    </Button>
-  </Flex>
-))}
+  async function deleteNote({ id }) {
+    const newNotes = notes.filter((note) => note.id !== id);
+    setNotes(newNotes);
+    await API.graphql({
+      query: deleteNoteMutation,
+      variables: { input: { id } },
+    });
+  }
 
   return (
     <View className="App">
@@ -145,12 +104,6 @@ async function createNote(event) {
           </Flex>
         ))}
       </View>
-      <View
-  name="image"
-  as="input"
-  type="file"
-  style={{ alignSelf: "end" }}
-/>
       <Button onClick={signOut}>Sign Out</Button>
     </View>
   );
