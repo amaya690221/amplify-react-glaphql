@@ -121,6 +121,12 @@ async function createNote(event) {
             variation="quiet"
             required
           />
+          <View
+  name="image"
+  as="input"
+  type="file"
+  style={{ alignSelf: "end" }}
+/>
           <Button type="submit" variation="primary">
             Create Note
           </Button>
@@ -145,12 +151,7 @@ async function createNote(event) {
           </Flex>
         ))}
       </View>
-      <View
-  name="image"
-  as="input"
-  type="file"
-  style={{ alignSelf: "end" }}
-/>
+
       <Button onClick={signOut}>Sign Out</Button>
     </View>
   );
